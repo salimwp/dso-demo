@@ -85,12 +85,31 @@ pipeline {
           }
         }
         stage('Docker BnP') {
-	  steps {
+	        steps {
             container('kaniko') {
-             sh '/kaniko/executor -f `pwd`/Dockerfile -c `pwd` --insecure --skip-tls-verify --cache=true --destination=docker.io/salimhaniff/dsodemo' 
+             sh '/kaniko/executor -f `pwd`/Dockerfile -c `pwd` --insecure --skip-tls-verify --cache=true --destination=docker.io/salimhaniff/dso-demo' 
             }
-	  }
-	}
+	        }
+	      }
+      }
+    }
+
+    stage('Image analysis') {
+      parallel {
+        stage('Image Linting') {
+          steps {
+            container('docker-tools') {
+              sh 'dockle docker.io/salimhaniff/dso-demo'
+            }
+          }
+        }
+        stage('Image Scan') {
+          steps {
+            container('docker-tools') {
+              sh 'trivy image --exit-code 1 docker.io/salimhaniff/dso-demo'
+            }
+          }
+        }
       }
     }
 
